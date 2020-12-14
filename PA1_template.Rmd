@@ -1,25 +1,88 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "PA1_template"
+author: "Olena"
+date: "14 12 2020"
+output: html_document
 ---
 
+## This is my variant of solving assigment 1 of Coursera course "Reproducible Research".
+# What is mean total number of steps taken per day?
+## The histogram shows the total number of steps per day.
+```{r, echo=TRUE}
+act <- read.csv(file = "activity.csv")
+stepsday <- aggregate(steps ~ date, act, sum)
+hist(stepsday$steps, col = "red", main = "Histogram of total number of steps per day", xlab = "Total number of steps per day")
+```
 
-## Loading and preprocessing the data
+## Mean of total number of steps per day is 10766, median is 10765.
+```{r, echo=TRUE}
+summary(stepsday)
+```
+
+# What is the average daily activity pattern?
+## The plot shows the average number of steps over all day.
+```{r, echo=TRUE}
+stepsinterval <- aggregate(steps ~ interval, act, mean)
+plot(stepsinterval$interval, stepsinterval$steps, type = "l", main = "Average number of steps over all day", xlab = "Interval", ylab = "Average number of steps")
+```
+
+## Which interval contains the maximum number of steps?
+```{r, echo=TRUE}
+maxsteps <- which.max(stepsinterval$steps)
+stepsinterval[maxsteps, ]
+```
+
+# Imputing missing values
+## The total number of missing value is:
+```{r, echo=TRUE}
+sum(is.na(act))
+```
+
+## The new dataset is equal to the original, but filled in by replacing NA's with the mean of interval.
+```{r, echo=TRUE}
+newact <- act
+for (i in 1:nrow(newact)) {
+  if(is.na(newact$steps[i])){
+    newinterwal <- newact$interval[i]
+    newsteps <- stepsinterval[
+      stepsinterval$interval == newinterwal,]
+    newact$steps[i] <- newsteps$steps
+  }
+}
+```
+
+## The new histogram (imputed NA's) shows the total number of steps per day.
+```{r, echo=TRUE}
+newstesday <- aggregate(steps ~ date, newact, sum)
+hist(newstesday$steps, col = "green", main = "Histogram of total number of steps per day (imputed NA's)", xlab = "Total number of steps per day")
+```
+
+## Mean of total number of steps per day is 10766, new median is 10766.
+```{r, echo=TRUE}
+summary(newstesday)
+```
+
+# Are there are differences in activity patterns between weekdays and weekends?
+## Create a new factor variables in the dataset - "weekday" and "weekend"
+```{r, echo=TRUE}
+Sys.setlocale("LC_TIME", "English")
+newact$date <- as.Date(newact$date)
+newact$day <- weekdays(newact$date)
+weekday <- newact[(!newact$day %in% c("Saturday", "Sunday")), ]
+weekend <- newact[(newact$day %in% c("Saturday", "Sunday")), ]
+wdaysteps <- weekday[,1]
+m <- matrix(wdaysteps, nrow = 288)
+weekdaymean <- apply(m, 1, mean)
+wendsteps <- weekend[,1]
+m <- matrix(wendsteps, nrow = 288)
+weekendmean <- apply(m, 1, mean)
+```
+
+## Plots show differences in activity patterns between weekdays and weekends
+```{r, echo=TRUE}
+par(mfrow=c(2,1))
+plot(newact$interval[1:288], weekdaymean, type = "l", xlab = "Intervals", ylab = "Number of steps", col = "blue", lwd=2, main = "Weekday")
+plot(newact$interval[1:288], weekendmean, type = "l", xlab = "Intervals", ylab = "Number of steps", col = "red", lwd=2, main = "Weekend")
+```
 
 
-
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
